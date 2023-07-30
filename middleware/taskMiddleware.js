@@ -1,4 +1,4 @@
-const Tasks   = require("../models/task.js");
+const Tasks = require("../models/task.js");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = "newtonSchool";
 
@@ -48,7 +48,39 @@ json =
 async function isowner(req, res, next) {
 
     try {
-        
+        const { task_id, token } = req.body;
+        if (!task_id) return res.status(404).json({ message: "Task id is required!", status: "error" })
+        if (!token) return res.status(404).json({ message: "Token is required!", status: "error" })
+
+        const decoded = jwt.verify(token, JWT_SECRET)
+        if (!decoded) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Invalid token'
+            })
+        }
+
+        const task = await Tasks.findById(task_id);
+        if (!task) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Given task doesnot exist'
+            })
+        }
+
+        console.log(task,"task")
+        console.log(decoded,"decoded")
+
+        if (task.creator_id != decoded.userId) {
+            return res.status(403).json({
+                status: 'fail',
+                message: 'Access Denied'
+            })
+        }
+
+
+        next();
+
         //Write your code here.
 
     } catch (err) {

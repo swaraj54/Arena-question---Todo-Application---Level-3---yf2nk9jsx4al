@@ -1,20 +1,20 @@
-const Users   = require("../models/user.js");
+const Users = require("../models/user.js");
 const jwt = require("jsonwebtoken");
-const Tasks   = require("../models/task.js");
-const bcrypt  = require('bcrypt');
+const Tasks = require("../models/task.js");
+const bcrypt = require('bcrypt');
 const { valid } = require("joi");
 const JWT_SECRET = "newtonSchool";
 
 
-const createTask =async (req, res) => {
+const createTask = async (req, res) => {
 
     //creator_id is user id who have created this task.
 
-    const { heading, description, token  } = req.body;
+    const { heading, description, token } = req.body;
     let decodedToken;
-    try{
+    try {
         decodedToken = jwt.verify(token, JWT_SECRET);
-    }catch(err){
+    } catch (err) {
         res.status(404).json({
             "status": 'fail',
             "message": 'Invalid token'
@@ -28,14 +28,14 @@ const createTask =async (req, res) => {
         creator_id
     };
 
-    try{
+    try {
         const task = await Tasks.create(newtask);
         res.status(200).json({
             message: 'Task added successfully',
             task_id: task._id,
             status: 'success'
         });
-    }catch(error){
+    } catch (error) {
         res.status(404).json({
             status: 'fail',
             message: error.message
@@ -49,13 +49,13 @@ const getdetailTask = async (req, res) => {
 
     const task_id = req.body.task_id;
 
-    try{
+    try {
         const task = await Tasks.findById(task_id);
         res.status(200).json({
             status: 'success',
             data: task
         })
-    }catch(err){
+    } catch (err) {
         res.status(404).json({
             status: 'fail',
             message: err.message
@@ -111,8 +111,32 @@ json = {
 
 
 const updateTask = async (req, res) => {
-    
-    const task_id = req.body.task_id;
+    try {
+        const task_id = req.body.task_id;
+        const token = req.body.token;
+        const heading = req.body.heading;
+        const description = req.body.description;
+        const status = req.body.status;
+
+        const UpdatedData = await Tasks.findByIdAndUpdate(task_id, { heading, description, status }, { returnNewDocument: true })
+
+        return res.status(200).json({
+            status: 'success',
+            data: {
+                status: UpdatedData.status,
+                _id: UpdatedData._id,
+                heading: UpdatedData.heading,
+                description: UpdatedData.description,
+                creator_id: UpdatedData.creator_id,
+            }
+        })
+
+    } catch (error) {
+        return res.status(404).json({
+            status: 'fail',
+            message: error.message
+        })
+    }
     //Write your code here.
 }
 
@@ -152,9 +176,24 @@ json = {
 
 const deleteTask = async (req, res) => {
 
-    const task_id = req.body.task_id;
-    //Write your code here.
+    try {
+        const task_id = req.body.task_id;
 
+        const deleteTask = await Tasks.findByIdAndDelete(task_id)
+
+        console.log(deleteTask, "deleteTask")
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Task deleted successfully'
+        })
+
+    } catch (error) {
+        return res.status(404).json({
+            "status": 'fail',
+            "message": error.message
+        })
+    }
 }
 
 
